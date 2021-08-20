@@ -1,13 +1,14 @@
 {
   "name": "browserslist-inspect",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "browserslist-inspect",
   "main": "lib/index.js",
   "module": "es/index.js",
   "types": "es/index.d.ts",
   "scripts": {
     "build": "rm -rf lib/ && tsc",
-    "build-es": "rm -rf es/ && tsc --project tsconfig.es.json"
+    "build-es": "rm -rf es/ && tsc --project tsconfig.es.json",
+    "prepublishOnly": "yarn build && yarn build-es"
   },
   "husky": {
     "hooks": {
