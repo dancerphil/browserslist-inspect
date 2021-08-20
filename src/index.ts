@@ -21,27 +21,40 @@ const map: Record<string, string> = {
     "samsung": 'Samsung'
 }
 
-const browserslistInspect = (queries?: string, opts?: Options): 'error' | 'warning' | 'success' => {
+export type BrowserInspectResult = 'MATCHED' | 'BROWSER_NOT_SUPPORTED' | 'VERSION_TOO_LOW' | 'VERSION_TOO_HIGH';
+
+const browserInspect = (queries?: string, opts?: Options): BrowserInspectResult => {
     const list = browserslist(queries, opts);
-    const browser = new UAParser(navigator.userAgent).getBrowser();
-    const targetBrowserName = (browser.name ?? '').split(' ')[0];
-    const targetBrowserMajor = (browser.version ?? '').split('.')[0];
+    const currentBrowser = new UAParser(navigator.userAgent).getBrowser();
+    const currentBrowserName = (currentBrowser.name ?? '').split(' ')[0];
+    const currentBrowserMajor = (currentBrowser.version ?? '').split('.')[0];
 
     const listFormat = list.map(item => {
         const [browserCode, version] = item.split(' ')
         return [map[browserCode], version.split('.')[0]]
     })
     const browserMajorList = listFormat
-        .filter(([browserName]) => browserName === targetBrowserName)
+        .filter(([browserName]) => browserName === currentBrowserName)
         .map(([_, major]) => major);
 
     if (browserMajorList.length === 0) {
-        return 'error';
+        return 'BROWSER_NOT_SUPPORTED';
     }
-    if (browserMajorList.includes(targetBrowserMajor)) {
-        return 'success';
+    if (browserMajorList.includes(currentBrowserMajor)) {
+        return 'MATCHED';
     }
-    return 'warning';
+    const maxMajor = Math.max(...browserMajorList.map(Number).filter(major => !Number.isNaN(major)))
+    if (Number(currentBrowserMajor) > maxMajor) {
+        return 'VERSION_TOO_HIGH'
+    }
+    if (Number(currentBrowserMajor) < maxMajor) {
+        return 'VERSION_TOO_LOW'
+    }
+    // NaN & not matched
+    return 'VERSION_TOO_LOW';
 }
 
-export default browserslistInspect
+// @ts-ignore
+global.process = global.process ?? {env: {}}
+
+export default browserInspect
